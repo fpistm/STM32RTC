@@ -935,6 +935,19 @@ void RTC_StopAlarm(alarm_t name)
   }
   /* Disable the Alarm A interrupt */
   HAL_RTC_DeactivateAlarm(&RtcHandle, name);
+#ifdef RTC_ALARM_B
+  if (((name == ALARM_B) && !(RTC_IsAlarmSet(ALARM_A))) ||
+      ((name == ALARM_A) && !(RTC_IsAlarmSet(ALARM_B))))
+#endif
+  {
+#if defined(ONESECOND_IRQn) && !defined(STM32F1xx)
+    if ((ONESECOND_IRQn == RTC_Alarm_IRQn) &&
+       !(LL_RTC_IsEnabledIT_WUT(RtcHandle.Instance)))
+#endif
+    {
+      HAL_NVIC_DisableIRQ(RTC_Alarm_IRQn);
+    }
+  }
 }
 
 /**
